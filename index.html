@@ -965,8 +965,8 @@
         .lightbox-next { right: -3.5rem; }
 
         @media (max-width: 640px) {
-            .lightbox-prev { left: 0.5rem; top: unset; bottom: -3.5rem; transform: none; }
-            .lightbox-next { right: 0.5rem; top: unset; bottom: -3.5rem; transform: none; }
+            .lightbox-prev { left: 0.5rem; top: 50%; bottom: unset; transform: translateY(-50%); }
+            .lightbox-next { right: 0.5rem; top: 50%; bottom: unset; transform: translateY(-50%); }
             .lightbox-close { top: -2.25rem; }
         }
 
@@ -1170,6 +1170,12 @@
             justify-content: center;
         }
 
+        /* Ensure mobile header respects theme */
+        [data-theme="dark"] .mobile-header-inner {
+            background: rgba(15, 23, 42, 0.9) !important;
+            border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
         .mobile-menu-content {
             background: var(--bg-primary);
             border-radius: 1.5rem;
@@ -1365,6 +1371,8 @@
         }
 
         @media (max-width: 480px) {
+            .navbar { display: none; }
+            .mobile-header { display: flex; }
             .hero-avatar {
                 width: 100px;
                 height: 100px;
@@ -1532,12 +1540,31 @@
                 <button class="theme-toggle" onclick="toggleTheme()" type="button" title="Toggle theme">
                     <span id="theme-icon">🌙</span>
                 </button>
+                
                 <button class="mobile-menu-btn" onclick="openMobileMenu()" type="button" title="Open menu">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
         </div>
     </nav>
+
+    <!-- Compact Mobile Header -->
+    <div class="mobile-header" style="display:none; position: fixed; top: 0; left: 0; right: 0; z-index: 1100;">
+        <div class="mobile-header-inner" style="display:flex; align-items:center; justify-content:space-between; padding: 0.5rem 1rem; backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.9);" data-dark-bg="rgba(15,23,42,0.9)">
+            <div class="mh-brand" style="display:flex; align-items:center; gap:0.5rem;">
+                <div class="nav-avatar" style="width:36px; height:36px; font-size:0.9rem;">VM</div>
+                <div style="font-weight:700;">Vishal</div>
+            </div>
+            <div class="mh-actions" style="display:flex; align-items:center; gap:0.5rem;">
+                <button class="mobile-menu-btn" onclick="openMobileMenu()" type="button" title="Open menu" style="padding:0.5rem;">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button class="theme-toggle" onclick="toggleTheme()" type="button" title="Toggle theme" style="padding:0.5rem; font-size:1.1rem;">
+                    <span id="theme-icon-mobile">🌙</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section id="about" class="hero">
@@ -1886,15 +1913,34 @@
         document.addEventListener('DOMContentLoaded', function() {
             const savedTheme = localStorage.getItem('theme');
             const themeIcon = document.getElementById('theme-icon');
+            const themeIconMobile = document.getElementById('theme-icon-mobile');
             
             if (savedTheme === 'dark') {
                 document.body.setAttribute('data-theme', 'dark');
                 themeIcon.textContent = '☀️';
+                if (themeIconMobile) themeIconMobile.textContent = '☀️';
             }
 
             // Initialize animations
             initializeAnimations();
             initializeTypingEffect();
+
+            // Show compact mobile header on phones
+            if (window.matchMedia('(max-width: 480px)').matches) {
+                const mh = document.querySelector('.mobile-header');
+                if (mh) mh.style.display = 'block';
+                // Apply theme background to mobile header immediately
+                const mhInner = document.querySelector('.mobile-header-inner');
+                if (mhInner) {
+                    if (document.body.getAttribute('data-theme') === 'dark') {
+                        mhInner.style.background = 'rgba(15, 23, 42, 0.9)';
+                        mhInner.style.borderBottomColor = 'rgba(255, 255, 255, 0.1)';
+                    } else {
+                        mhInner.style.background = 'rgba(255,255,255,0.9)';
+                        mhInner.style.borderBottomColor = 'var(--border-color)';
+                    }
+                }
+            }
         });
 
         // Mobile Menu Functions
@@ -2290,6 +2336,21 @@
         toggleTheme = function() {
             originalToggleTheme();
             updateFavicon();
+            const themeIconMobile = document.getElementById('theme-icon-mobile');
+            if (themeIconMobile) {
+                themeIconMobile.textContent = document.body.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+            }
+            // Sync mobile header background with theme
+            const mhInner = document.querySelector('.mobile-header-inner');
+            if (mhInner) {
+                if (document.body.getAttribute('data-theme') === 'dark') {
+                    mhInner.style.background = 'rgba(15, 23, 42, 0.9)';
+                    mhInner.style.borderBottomColor = 'rgba(255, 255, 255, 0.1)';
+                } else {
+                    mhInner.style.background = 'rgba(255,255,255,0.9)';
+                    mhInner.style.borderBottomColor = 'var(--border-color)';
+                }
+            }
         };
 
         // Add subtle animation to skill tags
